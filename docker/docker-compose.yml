@@ -1,0 +1,231 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Redis Caches for Edge Nodes
+  # ==========================================
+  redis-mumbai:
+    image: redis:7-alpine
+    container_name: edgemesh-redis-mumbai
+    ports:
+      - "6379:6379"
+    networks:
+      - edgemesh-net
+
+  redis-delhi:
+    image: redis:7-alpine
+    container_name: edgemesh-redis-delhi
+    ports:
+      - "6380:6379"
+    networks:
+      - edgemesh-net
+
+  redis-singapore:
+    image: redis:7-alpine
+    container_name: edgemesh-redis-singapore
+    ports:
+      - "6381:6379"
+    networks:
+      - edgemesh-net
+
+  # ==========================================
+  # Core Infrastructure Microservices
+  # ==========================================
+  origin-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-origin
+    command: pnpm --filter "@edgemesh/origin" start
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - NODE_ENV=production
+    volumes:
+      - origin-storage:/app/apps/origin/storage
+    networks:
+      - edgemesh-net
+
+  registry-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-registry
+    command: pnpm --filter "@edgemesh/registry" start
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=production
+    networks:
+      - edgemesh-net
+
+  routing-engine:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-routing
+    command: pnpm --filter "@edgemesh/routing-engine" start
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - registry-server
+    networks:
+      - edgemesh-net
+
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-gateway
+    command: pnpm --filter "@edgemesh/gateway" start
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - ROUTING_ENGINE_URL=http://routing-engine:3001
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - origin-server
+      - registry-server
+      - routing-engine
+    networks:
+      - edgemesh-net
+
+  # ==========================================
+  # Distributed Edge Nodes
+  # ==========================================
+  edge-mumbai:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-mumbai
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4001:4001"
+    environment:
+      - NODE_ID=edge-mumbai
+      - NODE_NAME=Edge Mumbai
+      - REGION=Mumbai, India
+      - LATITUDE=19.0760
+      - LONGITUDE=72.8777
+      - PORT=4001
+      - BASE_URL=http://edge-mumbai:4001
+      - REDIS_URL=redis://redis-mumbai:6379
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - redis-mumbai
+      - origin-server
+      - registry-server
+    volumes:
+      - mumbai-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
+  edge-delhi:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-delhi
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4002:4002"
+    environment:
+      - NODE_ID=edge-delhi
+      - NODE_NAME=Edge Delhi
+      - REGION=Delhi, India
+      - LATITUDE=28.7041
+      - LONGITUDE=77.1025
+      - PORT=4002
+      - BASE_URL=http://edge-delhi:4002
+      - REDIS_URL=redis://redis-delhi:6379
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - redis-delhi
+      - origin-server
+      - registry-server
+    volumes:
+      - delhi-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
+  edge-singapore:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-singapore
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4003:4003"
+    environment:
+      - NODE_ID=edge-singapore
+      - NODE_NAME=Edge Singapore
+      - REGION=Singapore
+      - LATITUDE=1.3521
+      - LONGITUDE=103.8198
+      - PORT=4003
+      - BASE_URL=http://edge-singapore:4003
+      - REDIS_URL=redis://redis-singapore:6379
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - redis-singapore
+      - origin-server
+      - registry-server
+    volumes:
+      - singapore-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
+  # ==========================================
+  # Frontend Applications
+  # ==========================================
+  admin-dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-admin-dashboard
+    command: pnpm --filter "@edgemesh/dashboard" preview --host 0.0.0.0 --port 5173
+    ports:
+      - "5173:5173"
+    depends_on:
+      - registry-server
+      - api-gateway
+    networks:
+      - edgemesh-net
+
+  client-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-client-app
+    command: pnpm --filter "@edgemesh/client" preview --host 0.0.0.0 --port 5174
+    ports:
+      - "5174:5174"
+    depends_on:
+      - api-gateway
+      - origin-server
+    networks:
+      - edgemesh-net
+
+networks:
+  edgemesh-net:
+    driver: bridge
+
+volumes:
+  origin-storage:
+  mumbai-storage:
+  delhi-storage:
+  singapore-storage:

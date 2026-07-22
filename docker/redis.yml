@@ -1,0 +1,53 @@
+version: '3.8'
+
+# ── EdgeMesh Redis Cache Layer ─────────────────────────────────────────────────
+# Standalone Redis-only compose file for use with start-servers.bat
+# Three isolated Redis instances — one per edge node
+#
+# Usage (automatic via start-servers.bat):
+#   docker compose -f docker/redis.yml up -d
+#   docker compose -f docker/redis.yml down
+
+services:
+
+  # Redis for Edge Mumbai (port 4001) → localhost:6379
+  redis-mumbai:
+    image: redis:7-alpine
+    container_name: edgemesh-redis-mumbai
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Redis for Edge Delhi (port 4002) → localhost:6380
+  redis-delhi:
+    image: redis:7-alpine
+    container_name: edgemesh-redis-delhi
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    command: redis-server --save "" --appendonly no --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Redis for Edge Singapore (port 4003) → localhost:6381
+  redis-singapore:
+    image: redis:7-alpine
+    container_name: edgemesh-redis-singapore
+    restart: unless-stopped
+    ports:
+      - "6381:6379"
+    command: redis-server --save "" --appendonly no --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5

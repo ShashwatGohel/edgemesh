@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environmental variables & secrets
+.env
+.env.local
+.env.development
+.env.production
+
+# Storage runtime uploads & temporary files
+apps/origin/storage/*
+!apps/origin/storage/.gitkeep
+apps/edge-node/storage/*
+!apps/edge-node/storage/.gitkeep
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Docker
+docker/data/

@@ -1,0 +1,27 @@
+{
+  "name": "edgemesh-edge-node",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EdgeMesh Edge Node — Standalone CDN Cache Node (no Docker, no pnpm workspace)",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "ioredis": "^5.3.2",
+    "pino": "^8.18.0",
+    "pino-pretty": "^10.3.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

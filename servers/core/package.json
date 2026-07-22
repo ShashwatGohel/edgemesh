@@ -1,0 +1,30 @@
+{
+  "name": "edgemesh-core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EdgeMesh Core Server — Origin, Registry, Routing Engine, API Gateway (standalone, no Docker)",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "form-data": "^4.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pino": "^8.18.0",
+    "pino-pretty": "^10.3.1",
+    "socket.io": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
