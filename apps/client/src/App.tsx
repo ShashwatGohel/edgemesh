@@ -3,8 +3,9 @@ import axios from 'axios';
 import { MapPin, Download, FileText, CheckCircle2, Clock, Zap, ArrowRight, RefreshCcw } from 'lucide-react';
 import { FileMetadata } from '@edgemesh/shared-types';
 
-const GATEWAY_URL = 'http://localhost:3000';
-const ORIGIN_URL = 'http://localhost:5000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const GATEWAY_URL = BACKEND_URL ? `${BACKEND_URL}/gateway` : 'http://localhost:3000';
+const ORIGIN_URL = BACKEND_URL ? `${BACKEND_URL}/origin` : 'http://localhost:5000';
 
 interface PresetLocation {
   name: string;
