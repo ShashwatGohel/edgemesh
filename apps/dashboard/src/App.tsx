@@ -4,9 +4,8 @@ import axios from 'axios';
 import { Server, HardDrive, Cpu, Database, Activity, Upload, Terminal, RefreshCw, Layers } from 'lucide-react';
 import { NodeHeartbeat, StepLogEvent, FileMetadata } from '@edgemesh/shared-types';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const REGISTRY_URL = BACKEND_URL ? `${BACKEND_URL}/registry` : 'http://localhost:3002';
-const ORIGIN_URL = BACKEND_URL ? `${BACKEND_URL}/origin` : 'http://localhost:5000';
+const REGISTRY_URL = 'http://localhost:3002';
+const ORIGIN_URL = 'http://localhost:5000';
 
 export default function App() {
   const [nodes, setNodes] = useState<Map<string, NodeHeartbeat>>(new Map());
@@ -41,7 +40,7 @@ export default function App() {
     fetchOriginFiles();
     fetchRedisKeys();
 
-    const socket = io(BACKEND_URL || REGISTRY_URL);
+    const socket = io(REGISTRY_URL);
 
     socket.on('connect', () => {
       addLog({
@@ -114,8 +113,7 @@ export default function App() {
   const fetchRedisKeys = async () => {
     for (const node of defaultNodes) {
       try {
-        const nodeUrl = BACKEND_URL ? `${BACKEND_URL}/edge/${node.id}` : `http://localhost:${node.port}`;
-        const res = await axios.get(`${nodeUrl}/api/redis/keys`, { timeout: 1500 });
+        const res = await axios.get(`http://localhost:${node.port}/api/redis/keys`, { timeout: 1500 });
         setRedisKeys((prev) => ({ ...prev, [node.id]: res.data.keys || [] }));
       } catch {
         setRedisKeys((prev) => ({ ...prev, [node.id]: [] }));
@@ -125,8 +123,7 @@ export default function App() {
 
   const fetchSelectedNodeFiles = async (node: { id: string; name: string; port: number }) => {
     try {
-      const nodeUrl = BACKEND_URL ? `${BACKEND_URL}/edge/${node.id}` : `http://localhost:${node.port}`;
-      const res = await axios.get(`${nodeUrl}/api/files`, { timeout: 1500 });
+      const res = await axios.get(`http://localhost:${node.port}/api/files`, { timeout: 1500 });
       setSelectedNodeFiles(res.data.files || []);
     } catch {
       setSelectedNodeFiles([]);

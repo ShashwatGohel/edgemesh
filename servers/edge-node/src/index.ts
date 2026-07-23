@@ -134,7 +134,8 @@ app.use(cors({
   origin: '*',
   exposedHeaders: ['X-Cache', 'X-Edge-Node-ID', 'X-Response-Time-Ms', 'X-Distance-Km', 'X-Selected-Node-Name', 'X-Selected-Node-ID', 'X-Request-ID']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Track active connections middleware
 app.use((_req, res, next) => {
@@ -475,8 +476,13 @@ async function sendHeartbeat() {
   };
   try {
     await axios.post(`${REGISTRY_URL}/api/nodes/heartbeat`, heartbeat);
-  } catch {
-    // Ignore heartbeat drops
+  } catch (err: any) {
+    // If registry says node not registered (404), auto re-register
+    if (err?.response?.status === 404) {
+      logger.warn({ nodeId: NODE_ID }, 'Node not registered in registry — re-registering...');
+      await registerWithRegistry();
+    }
+    // All other errors (network, etc.) silently ignored
   }
 }
 

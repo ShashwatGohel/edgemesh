@@ -6,5 +6,21 @@
     "sizeBytes": 1657,
     "checksum": "dd2234ecc8d05a4f17729e5af092b042",
     "createdAt": "2026-07-21T08:59:19.363Z"
+  },
+  "28b3111aa8b05836": {
+    "fileId": "28b3111aa8b05836",
+    "originalName": "img 1.jpeg",
+    "mimeType": "image/jpeg",
+    "sizeBytes": 130174,
+    "checksum": "f01f9cd9d1b8890b17ee30836277d8d1",
+    "createdAt": "2026-07-23T07:24:49.950Z"
+  },
+  "66e4aeec6a6269f6": {
+    "fileId": "66e4aeec6a6269f6",
+    "originalName": "img 2.jpeg",
+    "mimeType": "image/jpeg",
+    "sizeBytes": 42194,
+    "checksum": "087be3b72197a9e2f0b2f2e45414e76e",
+    "createdAt": "2026-07-23T07:27:46.470Z"
   }
 }

@@ -1,0 +1,43 @@
+Use the Apify connector to research the Software Engineer / SDE campus placement interview process for Concentric AI.
+
+Search only credible sources such as:
+- GeeksforGeeks
+- Glassdoor
+- Reddit (well-supported discussions only)
+- LeetCode Discuss
+- Medium or engineering blogs containing interview experiences
+
+Cross-check information across multiple sources, prioritize recent interview experiences, and ignore unverified claims.
+
+Provide only:
+
+1. Interview Process
+- Number of rounds
+- Purpose of each round
+
+2. DSA Round
+- Most frequently asked coding questions (exact questions whenever available, otherwise representative questions)
+- Frequency if multiple sources mention the same question
+- Most common DSA topics
+- Difficulty level
+
+3. Technical/Core CS Round
+List the most frequently asked topics and representative questions from:
+- DBMS
+- Operating Systems
+- Computer Networks
+- OOP
+- SQL
+
+4. LLD / System Design
+- Whether LLD or HLD/System Design rounds are conducted
+- Most frequently asked design problems or topics
+
+For every claim, rely on multiple interview experiences whenever possible. If sources disagree, mention the consensus and indicate the level of confidence (High/Medium/Low).
+
+If there are very few interview experiences specifically for Concentric AI, then:
+1. Clearly state that limited data is available.
+2. Search for interview experiences of companies with a similar AI/ML startup hiring process.
+3. Use those only as supporting evidence and clearly distinguish them from Concentric AI-specific experiences.
+
+Present the results in clean Markdown with tables wherever appropriate.
