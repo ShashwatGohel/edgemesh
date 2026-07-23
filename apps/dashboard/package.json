@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
-    "build": "tsc && vite build",
+    "build": "pnpm --filter @edgemesh/shared-types build && pnpm --filter @edgemesh/shared-utils build && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
