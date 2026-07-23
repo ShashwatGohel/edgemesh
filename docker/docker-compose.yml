@@ -189,6 +189,141 @@ services:
     networks:
       - edgemesh-net
 
+  edge-london:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-london
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4004:4004"
+    environment:
+      - NODE_ID=edge-london
+      - NODE_NAME=Edge London
+      - REGION=London, UK
+      - LATITUDE=51.5074
+      - LONGITUDE=-0.1278
+      - PORT=4004
+      - BASE_URL=http://edge-london:4004
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - origin-server
+      - registry-server
+    volumes:
+      - london-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
+  edge-frankfurt:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-frankfurt
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4005:4005"
+    environment:
+      - NODE_ID=edge-frankfurt
+      - NODE_NAME=Edge Frankfurt
+      - REGION=Frankfurt, Germany
+      - LATITUDE=50.1109
+      - LONGITUDE=8.6821
+      - PORT=4005
+      - BASE_URL=http://edge-frankfurt:4005
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - origin-server
+      - registry-server
+    volumes:
+      - frankfurt-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
+  edge-newyork:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-newyork
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4006:4006"
+    environment:
+      - NODE_ID=edge-newyork
+      - NODE_NAME=Edge New York
+      - REGION=New York, USA
+      - LATITUDE=40.7128
+      - LONGITUDE=-74.0060
+      - PORT=4006
+      - BASE_URL=http://edge-newyork:4006
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - origin-server
+      - registry-server
+    volumes:
+      - newyork-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
+  edge-tokyo:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-tokyo
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4007:4007"
+    environment:
+      - NODE_ID=edge-tokyo
+      - NODE_NAME=Edge Tokyo
+      - REGION=Tokyo, Japan
+      - LATITUDE=35.6762
+      - LONGITUDE=139.6503
+      - PORT=4007
+      - BASE_URL=http://edge-tokyo:4007
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - origin-server
+      - registry-server
+    volumes:
+      - tokyo-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
+  edge-sydney:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.node
+    container_name: edgemesh-edge-sydney
+    command: pnpm --filter "@edgemesh/edge-node" start
+    ports:
+      - "4008:4008"
+    environment:
+      - NODE_ID=edge-sydney
+      - NODE_NAME=Edge Sydney
+      - REGION=Sydney, Australia
+      - LATITUDE=-33.8688
+      - LONGITUDE=151.2093
+      - PORT=4008
+      - BASE_URL=http://edge-sydney:4008
+      - ORIGIN_URL=http://origin-server:5000
+      - REGISTRY_URL=http://registry-server:3002
+      - NODE_ENV=production
+    depends_on:
+      - origin-server
+      - registry-server
+    volumes:
+      - sydney-storage:/app/apps/edge-node/storage
+    networks:
+      - edgemesh-net
+
   # ==========================================
   # Frontend Applications
   # ==========================================
@@ -229,3 +364,8 @@ volumes:
   mumbai-storage:
   delhi-storage:
   singapore-storage:
+  london-storage:
+  frankfurt-storage:
+  newyork-storage:
+  tokyo-storage:
+  sydney-storage:

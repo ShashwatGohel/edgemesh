@@ -29,6 +29,11 @@ export default function App() {
     { id: 'edge-mumbai', name: 'Edge Mumbai', region: 'Mumbai, India', port: 4001 },
     { id: 'edge-delhi', name: 'Edge Delhi', region: 'Delhi, India', port: 4002 },
     { id: 'edge-singapore', name: 'Edge Singapore', region: 'Singapore', port: 4003 },
+    { id: 'edge-london', name: 'Edge London', region: 'London, UK', port: 4004 },
+    { id: 'edge-frankfurt', name: 'Edge Frankfurt', region: 'Frankfurt, Germany', port: 4005 },
+    { id: 'edge-newyork', name: 'Edge New York', region: 'New York, USA', port: 4006 },
+    { id: 'edge-tokyo', name: 'Edge Tokyo', region: 'Tokyo, Japan', port: 4007 },
+    { id: 'edge-sydney', name: 'Edge Sydney', region: 'Sydney, Australia', port: 4008 },
   ];
 
   useEffect(() => {

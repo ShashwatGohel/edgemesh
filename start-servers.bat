@@ -139,6 +139,21 @@ start "EdgeMesh | EDGE DELHI" cmd /k "cd /d %~dp0servers\edge-node && set NODE_I
 echo [LAUNCH] Starting Edge Node Singapore (Port 4003)...
 start "EdgeMesh | EDGE SINGAPORE" cmd /k "cd /d %~dp0servers\edge-node && set NODE_ID=edge-singapore&&set NODE_NAME=Edge Singapore&&set REGION=Singapore&&set LATITUDE=1.3521&&set LONGITUDE=103.8198&&set PORT=4003&&set BASE_URL=http://localhost:4003&&set REDIS_URL=redis://localhost:6381&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&node dist/index.js"
 
+echo [LAUNCH] Starting Edge Node London    (Port 4004)...
+start "EdgeMesh | EDGE LONDON" cmd /k "cd /d %~dp0servers\edge-node && set NODE_ID=edge-london&&set NODE_NAME=Edge London&&set REGION=London, UK&&set LATITUDE=51.5074&&set LONGITUDE=-0.1278&&set PORT=4004&&set BASE_URL=http://localhost:4004&&set REDIS_URL=redis://localhost:6382&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&node dist/index.js"
+
+echo [LAUNCH] Starting Edge Node Frankfurt (Port 4005)...
+start "EdgeMesh | EDGE FRANKFURT" cmd /k "cd /d %~dp0servers\edge-node && set NODE_ID=edge-frankfurt&&set NODE_NAME=Edge Frankfurt&&set REGION=Frankfurt, Germany&&set LATITUDE=50.1109&&set LONGITUDE=8.6821&&set PORT=4005&&set BASE_URL=http://localhost:4005&&set REDIS_URL=redis://localhost:6383&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&node dist/index.js"
+
+echo [LAUNCH] Starting Edge Node New York  (Port 4006)...
+start "EdgeMesh | EDGE NEWYORK" cmd /k "cd /d %~dp0servers\edge-node && set NODE_ID=edge-newyork&&set NODE_NAME=Edge New York&&set REGION=New York, USA&&set LATITUDE=40.7128&&set LONGITUDE=-74.0060&&set PORT=4006&&set BASE_URL=http://localhost:4006&&set REDIS_URL=redis://localhost:6384&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&node dist/index.js"
+
+echo [LAUNCH] Starting Edge Node Tokyo     (Port 4007)...
+start "EdgeMesh | EDGE TOKYO" cmd /k "cd /d %~dp0servers\edge-node && set NODE_ID=edge-tokyo&&set NODE_NAME=Edge Tokyo&&set REGION=Tokyo, Japan&&set LATITUDE=35.6762&&set LONGITUDE=139.6503&&set PORT=4007&&set BASE_URL=http://localhost:4007&&set REDIS_URL=redis://localhost:6385&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&node dist/index.js"
+
+echo [LAUNCH] Starting Edge Node Sydney    (Port 4008)...
+start "EdgeMesh | EDGE SYDNEY" cmd /k "cd /d %~dp0servers\edge-node && set NODE_ID=edge-sydney&&set NODE_NAME=Edge Sydney&&set REGION=Sydney, Australia&&set LATITUDE=-33.8688&&set LONGITUDE=151.2093&&set PORT=4008&&set BASE_URL=http://localhost:4008&&set REDIS_URL=redis://localhost:6386&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&node dist/index.js"
+
 echo [LAUNCH] Starting Admin Dashboard   (Port 5173)...
 start "EdgeMesh | DASHBOARD" cmd /k "cd /d %~dp0apps\dashboard && npx vite --port 5173"
 
@@ -160,6 +175,11 @@ echo   EDGE NODES:
 echo     Edge Mumbai      ^> http://localhost:4001/health
 echo     Edge Delhi       ^> http://localhost:4002/health
 echo     Edge Singapore   ^> http://localhost:4003/health
+echo     Edge London      ^> http://localhost:4004/health
+echo     Edge Frankfurt   ^> http://localhost:4005/health
+echo     Edge New York    ^> http://localhost:4006/health
+echo     Edge Tokyo       ^> http://localhost:4007/health
+echo     Edge Sydney      ^> http://localhost:4008/health
 echo.
 echo   FRONTENDS:
 echo     Admin Dashboard  ^> http://localhost:5173

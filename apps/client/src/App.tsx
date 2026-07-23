@@ -17,8 +17,10 @@ const PRESETS: PresetLocation[] = [
   { name: 'Delhi', lat: 28.7041, lng: 77.1025 },
   { name: 'Singapore', lat: 1.3521, lng: 103.8198 },
   { name: 'London', lat: 51.5074, lng: -0.1278 },
-  { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+  { name: 'Frankfurt', lat: 50.1109, lng: 8.6821 },
   { name: 'New York', lat: 40.7128, lng: -74.0060 },
+  { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+  { name: 'Sydney', lat: -33.8688, lng: 151.2093 },
 ];
 
 interface ExecutionStep {

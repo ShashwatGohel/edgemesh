@@ -4,12 +4,14 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import axios from 'axios';
 import { createLogger } from '@edgemesh/logger';
 import { FileMetadata } from '@edgemesh/shared-types';
 
 const logger = createLogger('origin-server');
 const app = express();
 const PORT = process.env.PORT || 5000;
+const REGISTRY_URL = process.env.REGISTRY_URL || 'http://localhost:3002';
 
 const STORAGE_DIR = path.resolve(process.cwd(), 'storage');
 const METADATA_FILE = path.resolve(STORAGE_DIR, 'metadata.json');
@@ -88,6 +90,36 @@ app.post('/api/files/upload', upload.single('file'), (req, res) => {
   writeMetadataStore(store);
 
   logger.info({ fileId, originalName: metadata.originalName }, 'File successfully uploaded to Origin master storage');
+
+  // Proactively broadcast uploaded file to all active Edge Nodes
+  const fileBase64 = fileBuffer.toString('base64');
+  (async () => {
+    try {
+      const registryRes = await axios.get(`${REGISTRY_URL}/api/nodes/healthy`, { timeout: 2000 });
+      const healthyNodes = registryRes.data.nodes || [];
+      logger.info({ nodeCount: healthyNodes.length, fileId }, 'Broadcasting uploaded file to active Edge Nodes');
+
+      for (const nodeObj of healthyNodes) {
+        const targetNodeUrl = nodeObj.config?.baseUrl || nodeObj.baseUrl;
+        if (targetNodeUrl) {
+          try {
+            await axios.post(`${targetNodeUrl}/api/files/broadcast`, {
+              fileId,
+              originalName: metadata.originalName,
+              mimeType: metadata.mimeType,
+              fileBase64,
+            }, { timeout: 4000 });
+            logger.info({ targetNodeUrl, fileId }, 'Successfully broadcasted file to Edge Node');
+          } catch (bErr) {
+            logger.warn({ targetNodeUrl, error: (bErr as Error).message }, 'Failed to broadcast file to Edge Node');
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn({ error: (err as Error).message }, 'Could not fetch healthy nodes for proactive broadcast');
+    }
+  })();
+
   res.status(201).json({ message: 'File uploaded successfully', metadata });
 });
 

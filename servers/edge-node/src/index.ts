@@ -230,6 +230,46 @@ app.get('/api/redis/keys', async (_req, res) => {
   }
 });
 
+// Proactive File Broadcast / Pre-warm API (triggered by Origin server on upload)
+app.post('/api/files/broadcast', async (req, res) => {
+  try {
+    const { fileId, originalName, mimeType, fileBase64, requestId } = req.body;
+    if (!fileId || !fileBase64) {
+      return res.status(400).json({ error: 'fileId and fileBase64 are required' });
+    }
+
+    const fileBuffer = Buffer.from(fileBase64, 'base64');
+    const ext = path.extname(originalName || '') || '.bin';
+    const diskPath = path.join(STORAGE_DIR, `${fileId}${ext}`);
+
+    // Save to Level 2 Local Disk Storage
+    fs.writeFileSync(diskPath, fileBuffer);
+
+    // Save to Level 1 Redis Cache
+    const redisKey = `file:${fileId}`;
+    const redisMetaKey = `file:meta:${fileId}`;
+    if (redisClient && redisClient.status === 'ready') {
+      await redisClient.set(redisKey, fileBase64, 'EX', 300);
+      await redisClient.set(redisMetaKey, JSON.stringify({ fileId, originalName, mimeType: mimeType || 'application/octet-stream' }), 'EX', 300);
+    }
+
+    logger.info({ fileId, nodeId: NODE_ID }, '⚡ Broadcasted file received and pre-warmed in L2 Disk & L1 Redis');
+
+    await emitStepLog(
+      requestId,
+      0,
+      'Proactive Broadcast Received',
+      `Edge Node '${NODE_NAME}' received broadcast for '${originalName || fileId}'. Pre-warmed into L2 Disk & L1 Redis.`,
+      'success'
+    );
+
+    res.json({ success: true, nodeId: NODE_ID, message: 'File pre-warmed successfully' });
+  } catch (err) {
+    logger.error({ error: (err as Error).message }, 'Failed to process file broadcast');
+    res.status(500).json({ error: 'Failed to process file broadcast' });
+  }
+});
+
 // Main Waterfall Cache File Fetch API
 app.get('/files/:fileId', async (req, res) => {
   const { fileId } = req.params;

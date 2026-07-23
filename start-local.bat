@@ -43,11 +43,26 @@ start "EdgeMesh | Edge Mumbai" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID
 echo [7/9] Starting Edge Node Delhi      (http://localhost:4002)...
 start "EdgeMesh | Edge Delhi" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID=edge-delhi&&set NODE_NAME=Edge Delhi&&set REGION=Delhi, India&&set LATITUDE=28.7041&&set LONGITUDE=77.1025&&set PORT=4002&&set BASE_URL=http://localhost:4002&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&pnpm dev"
 
-echo [8/9] Starting Edge Node Singapore  (http://localhost:4003)...
+echo [8/14] Starting Edge Node Singapore  (http://localhost:4003)...
 start "EdgeMesh | Edge Singapore" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID=edge-singapore&&set NODE_NAME=Edge Singapore&&set REGION=Singapore&&set LATITUDE=1.3521&&set LONGITUDE=103.8198&&set PORT=4003&&set BASE_URL=http://localhost:4003&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&pnpm dev"
 
+echo [9/14] Starting Edge Node London     (http://localhost:4004)...
+start "EdgeMesh | Edge London" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID=edge-london&&set NODE_NAME=Edge London&&set REGION=London, UK&&set LATITUDE=51.5074&&set LONGITUDE=-0.1278&&set PORT=4004&&set BASE_URL=http://localhost:4004&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&pnpm dev"
+
+echo [10/14] Starting Edge Node Frankfurt  (http://localhost:4005)...
+start "EdgeMesh | Edge Frankfurt" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID=edge-frankfurt&&set NODE_NAME=Edge Frankfurt&&set REGION=Frankfurt, Germany&&set LATITUDE=50.1109&&set LONGITUDE=8.6821&&set PORT=4005&&set BASE_URL=http://localhost:4005&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&pnpm dev"
+
+echo [11/14] Starting Edge Node New York   (http://localhost:4006)...
+start "EdgeMesh | Edge New York" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID=edge-newyork&&set NODE_NAME=Edge New York&&set REGION=New York, USA&&set LATITUDE=40.7128&&set LONGITUDE=-74.0060&&set PORT=4006&&set BASE_URL=http://localhost:4006&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&pnpm dev"
+
+echo [12/14] Starting Edge Node Tokyo      (http://localhost:4007)...
+start "EdgeMesh | Edge Tokyo" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID=edge-tokyo&&set NODE_NAME=Edge Tokyo&&set REGION=Tokyo, Japan&&set LATITUDE=35.6762&&set LONGITUDE=139.6503&&set PORT=4007&&set BASE_URL=http://localhost:4007&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&pnpm dev"
+
+echo [13/14] Starting Edge Node Sydney     (http://localhost:4008)...
+start "EdgeMesh | Edge Sydney" cmd /k "cd /d %~dp0\apps\edge-node && set NODE_ID=edge-sydney&&set NODE_NAME=Edge Sydney&&set REGION=Sydney, Australia&&set LATITUDE=-33.8688&&set LONGITUDE=151.2093&&set PORT=4008&&set BASE_URL=http://localhost:4008&&set ORIGIN_URL=http://localhost:5000&&set REGISTRY_URL=http://localhost:3002&&pnpm dev"
+
 REM ---- Frontend Apps ----
-echo [9/9] Starting Admin Dashboard ^& Client App (5173, 5174)...
+echo [14/14] Starting Admin Dashboard ^& Client App (5173, 5174)...
 start "EdgeMesh | Admin Dashboard" cmd /k "cd /d %~dp0\apps\dashboard && pnpm dev"
 start "EdgeMesh | Client App" cmd /k "cd /d %~dp0\apps\client && pnpm dev"
 
@@ -64,6 +79,11 @@ echo   Origin Server    : http://localhost:5000
 echo   Edge Mumbai      : http://localhost:4001
 echo   Edge Delhi       : http://localhost:4002
 echo   Edge Singapore   : http://localhost:4003
+echo   Edge London      : http://localhost:4004
+echo   Edge Frankfurt   : http://localhost:4005
+echo   Edge New York    : http://localhost:4006
+echo   Edge Tokyo       : http://localhost:4007
+echo   Edge Sydney      : http://localhost:4008
 echo ======================================================================
 echo.
 echo  NOTE: Redis cache is DISABLED in this mode. Edge nodes will fall
