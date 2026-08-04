@@ -31,6 +31,15 @@ export interface NodeHeartbeat {
   cacheHitCount: number;
   cacheMissCount: number;
   lastHeartbeatTimestamp: number;
+  awsMetadata?: {
+    instanceId: string;
+    instanceType: string;
+    region: string;
+    availabilityZone: string;
+    amiId: string;
+    lifecycle: 'spot' | 'on-demand';
+    publicIp?: string;
+  };
 }
 
 export interface FileMetadata {

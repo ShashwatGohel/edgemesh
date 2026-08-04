@@ -38,12 +38,17 @@ export default function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [downloadBlobUrl, setDownloadBlobUrl] = useState<string | null>(null);
 
+  const [selectedEdgeFn, setSelectedEdgeFn] = useState<'none' | 'inject-security-headers' | 'geo-personalization'>('none');
+
   const [metrics, setMetrics] = useState<{
     cacheStatus: string;
     selectedNodeId: string;
     selectedNodeName: string;
     distanceKm: string;
     totalLatencyMs: string;
+    lambdaFnExecuted?: string;
+    lambdaGreeting?: string;
+    lambdaHeadersCount?: number;
   } | null>(null);
 
   const [timeline, setTimeline] = useState<ExecutionStep[]>([
@@ -100,7 +105,7 @@ export default function App() {
 
     try {
       const response = await axios.get(`${GATEWAY_URL}/cdn/fetch`, {
-        params: { fileId: selectedFileId, lat: clientLat, lng: clientLng },
+        params: { fileId: selectedFileId, lat: clientLat, lng: clientLng, edgeFn: selectedEdgeFn },
         responseType: 'blob',
       });
 
@@ -109,6 +114,8 @@ export default function App() {
       const selectedNodeName = (response.headers['x-selected-node-name'] as string) || 'Edge Mumbai';
       const distanceKm = (response.headers['x-distance-km'] as string) || '12.4';
       const totalLatencyMs = (response.headers['x-total-latency-ms'] as string) || (Date.now() - startTime).toString();
+      const lambdaFnExecuted = response.headers['x-lambda-edge-executed'] as string | undefined;
+      const lambdaGreeting = response.headers['x-lambda-edge-greeting'] as string | undefined;
 
       // Create downloadable file object URL
       const mimeTypeStr = typeof response.headers['content-type'] === 'string' ? response.headers['content-type'] : 'application/octet-stream';
@@ -122,6 +129,8 @@ export default function App() {
         selectedNodeName,
         distanceKm,
         totalLatencyMs,
+        lambdaFnExecuted,
+        lambdaGreeting,
       });
 
       // Update timeline to all completed
@@ -129,9 +138,9 @@ export default function App() {
         { step: 1, label: 'Client Request Ingress', detail: `Sent request from coordinates (${clientLat.toFixed(4)}, ${clientLng.toFixed(4)})`, status: 'completed' },
         { step: 2, label: 'API Gateway Forwarding', detail: `Forwarded via Gateway (${GATEWAY_URL})`, status: 'completed' },
         { step: 3, label: 'Routing Engine Decision', detail: `Selected Node: ${selectedNodeName} (${distanceKm} km)`, status: 'completed' },
-        { step: 4, label: 'Edge Node Redis L1 Check', detail: cacheStatus === 'HIT-REDIS' ? '🎯 REDIS CACHE HIT' : 'Redis Cache MISS', status: 'completed' },
-        { step: 5, label: 'Edge Node Disk L2 Check', detail: cacheStatus === 'HIT-DISK' ? '🎯 DISK CACHE HIT' : 'Disk Storage MISS', status: 'completed' },
-        { step: 6, label: 'Origin L3 Fetch (If Miss)', detail: cacheStatus.startsWith('MISS') ? '☁️ Fetched from Origin Master Storage' : 'Bypassed (Already cached at Edge)', status: 'completed' },
+        { step: 4, label: 'Lambda@Edge Function', detail: lambdaFnExecuted ? `⚡ Executed '${lambdaFnExecuted}' at Edge` : 'Bypassed (No edge function selected)', status: 'completed' },
+        { step: 5, label: 'Edge Node Cache Check', detail: cacheStatus.startsWith('HIT') ? `🎯 CACHE HIT (${cacheStatus})` : 'Cache MISS', status: 'completed' },
+        { step: 6, label: 'Origin L3 Fetch (If Miss)', detail: cacheStatus.startsWith('MISS') ? '☁️ Fetched from Origin Master Storage' : 'Bypassed (Served from Edge)', status: 'completed' },
         { step: 7, label: 'Egress Delivery to Client', detail: `Completed in ${totalLatencyMs}ms. Status: ${cacheStatus}`, status: 'completed' },
       ]);
     } catch (err) {
@@ -242,6 +251,23 @@ export default function App() {
                 </select>
               </div>
 
+              {/* Lambda@Edge Function Selector */}
+              <div>
+                <label className="block text-[10px] text-zinc-500 uppercase mb-1 flex items-center justify-between">
+                  <span>⚡ Lambda@Edge Function</span>
+                  <span className="text-amber-400 font-bold">AWS Serverless</span>
+                </label>
+                <select
+                  value={selectedEdgeFn}
+                  onChange={(e) => setSelectedEdgeFn(e.target.value as any)}
+                  className="w-full bg-zinc-950 border border-amber-900/50 px-3 py-2 text-xs text-amber-300 font-mono focus:border-amber-400 focus:outline-none"
+                >
+                  <option value="none">None (Standard Cache Request)</option>
+                  <option value="inject-security-headers">Inject Security Headers (OWASP Response Headers)</option>
+                  <option value="geo-personalization">Geo-Personalization (Custom Greeting & Location Header)</option>
+                </select>
+              </div>
+
               <button
                 onClick={handleFetch}
                 disabled={loading || !selectedFileId}
@@ -285,6 +311,20 @@ export default function App() {
                     {metrics.cacheStatus}
                   </span>
                 </div>
+
+                {metrics.lambdaFnExecuted && (
+                  <div className="pt-2 border-t border-zinc-900 space-y-1 text-[11px]">
+                    <div className="flex justify-between text-amber-400 font-bold">
+                      <span>⚡ Lambda@Edge Function</span>
+                      <span>{metrics.lambdaFnExecuted}</span>
+                    </div>
+                    {metrics.lambdaGreeting && (
+                      <div className="text-zinc-400 text-[10px] italic">
+                        "{metrics.lambdaGreeting}"
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {downloadBlobUrl && (
                   <div className="pt-3 border-t border-zinc-800">

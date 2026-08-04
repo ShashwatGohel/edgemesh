@@ -241,7 +241,7 @@ flowchart LR
         E4[GET /files/:fileId]
         E5[POST /api/files/broadcast]
         E6[heartbeat sender]
-        E7[Lambda@Edge simulation]
+        E7["Lambda@Edge simulation"]
     end
 
     subgraph OriginService[Origin]
@@ -302,7 +302,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[GET /files/:fileId] --> B[Optional Lambda@Edge function]
+    A[GET /files/:fileId] --> B["Optional Lambda@Edge function"]
     B --> C[Check Redis key file:fileId]
     C --> D{Redis hit?}
     D -- Yes --> E[Return file<br/>X-Cache=HIT-REDIS]
@@ -669,4 +669,3 @@ These are good to mention because they show engineering maturity:
 You can summarize the project like this:
 
 > EdgeMesh is a CDN simulator that models how distributed content delivery works end to end: client ingress through a gateway, dynamic route selection using geography and load, heartbeat-based service discovery, edge caching with Redis plus disk fallback, authoritative origin storage, and real-time observability. I intentionally kept it locally runnable while still adding production-inspired ideas like pre-warming, cloud integration hooks, and edge-side response functions, so it is both demonstrable and architecturally rich.
-

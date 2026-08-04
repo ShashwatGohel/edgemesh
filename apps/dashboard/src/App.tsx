@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
-import { Server, HardDrive, Cpu, Database, Activity, Upload, Terminal, RefreshCw, Layers } from 'lucide-react';
+import { Server, HardDrive, Cpu, Database, Activity, Upload, Terminal, RefreshCw, Layers, Cloud, Zap, Shield, Globe } from 'lucide-react';
 import { NodeHeartbeat, StepLogEvent, FileMetadata } from '@edgemesh/shared-types';
 
 const REGISTRY_URL = 'http://localhost:3002';
@@ -302,6 +302,22 @@ export default function App() {
                     {hb?.cacheHitCount || 0} / {hb?.cacheMissCount || 0}
                   </span>
                 </div>
+
+                {/* AWS EC2 Badge */}
+                {hb?.awsMetadata && (
+                  <div className="pt-2 border-t border-zinc-900 flex items-center justify-between text-[10px]">
+                    <span className="flex items-center gap-1 text-zinc-400">
+                      <Cloud className="w-3 h-3" /> EC2
+                    </span>
+                    <span className={`px-1.5 py-0.5 border ${
+                      hb.awsMetadata.simulated
+                        ? 'border-amber-700 text-amber-400 bg-amber-950/30'
+                        : 'border-emerald-700 text-emerald-400 bg-emerald-950/30'
+                    }`}>
+                      {hb.awsMetadata.simulated ? 'SIMULATED' : 'REAL'} · {hb.awsMetadata.instanceType}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -309,37 +325,82 @@ export default function App() {
       </div>
 
       {/* Selected Edge Server Disk Storage Drawer (Conditional) */}
-      {selectedNode && (
-        <div className="bg-black border border-white p-5 mb-6">
-          <div className="flex justify-between items-center border-b border-zinc-800 pb-2 mb-4">
-            <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-              <Layers className="w-4 h-4 text-white animate-pulse" />
-              {selectedNode.name} Cache Local Storage
-            </h2>
-            <button
-              onClick={() => setSelectedNode(null)}
-              className="text-[10px] border border-zinc-700 px-2 py-0.5 hover:bg-white hover:text-black transition"
-            >
-              CLOSE INSPECTOR
-            </button>
-          </div>
-          {selectedNodeFiles.length === 0 ? (
-            <div className="text-xs text-zinc-500 italic">No files cached on this node's disk.</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {selectedNodeFiles.map((file) => (
-                <div key={file.name} className="border border-zinc-800 bg-zinc-950 p-3 text-xs">
-                  <div className="text-white font-bold truncate mb-1">{file.name}</div>
-                  <div className="flex justify-between text-[10px] text-zinc-500">
-                    <span>Size: {formatBytes(file.sizeBytes)}</span>
-                    <span>Cached: {new Date(file.createdAt).toLocaleTimeString()}</span>
+      {selectedNode && (() => {
+        const hb = nodes.get(selectedNode.id);
+        return (
+          <div className="bg-black border border-white p-5 mb-6">
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-2 mb-4">
+              <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <Layers className="w-4 h-4 text-white animate-pulse" />
+                {selectedNode.name} Cache Local Storage
+              </h2>
+              <button
+                onClick={() => setSelectedNode(null)}
+                className="text-[10px] border border-zinc-700 px-2 py-0.5 hover:bg-white hover:text-black transition"
+              >
+                CLOSE INSPECTOR
+              </button>
+            </div>
+
+            {/* AWS EC2 Instance Metadata Panel */}
+            {hb?.awsMetadata && (
+              <div className="mb-4 p-3 border border-zinc-800 bg-zinc-950">
+                <div className="flex items-center gap-2 mb-3">
+                  <Cloud className="w-4 h-4 text-amber-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">AWS EC2 Instance Metadata</span>
+                  {hb.awsMetadata.simulated && (
+                    <span className="text-[9px] px-1.5 py-0.5 border border-amber-700 text-amber-500 bg-amber-950/40">SIMULATED</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-[10px]">
+                  <div>
+                    <span className="block text-zinc-600 uppercase mb-0.5">Instance ID</span>
+                    <span className="text-amber-300 font-mono">{hb.awsMetadata.instanceId}</span>
+                  </div>
+                  <div>
+                    <span className="block text-zinc-600 uppercase mb-0.5">Instance Type</span>
+                    <span className="text-white font-mono">{hb.awsMetadata.instanceType}</span>
+                  </div>
+                  <div>
+                    <span className="block text-zinc-600 uppercase mb-0.5">AWS Region</span>
+                    <span className="text-white font-mono">{hb.awsMetadata.region}</span>
+                  </div>
+                  <div>
+                    <span className="block text-zinc-600 uppercase mb-0.5">Availability Zone</span>
+                    <span className="text-white font-mono">{hb.awsMetadata.availabilityZone}</span>
+                  </div>
+                  <div>
+                    <span className="block text-zinc-600 uppercase mb-0.5">AMI ID</span>
+                    <span className="text-white font-mono truncate block max-w-[120px]">{hb.awsMetadata.amiId}</span>
+                  </div>
+                  <div>
+                    <span className="block text-zinc-600 uppercase mb-0.5">Lifecycle</span>
+                    <span className={`font-mono ${
+                      hb.awsMetadata.lifecycle === 'spot' ? 'text-purple-400' : 'text-emerald-400'
+                    }`}>{hb.awsMetadata.lifecycle.toUpperCase()}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+              </div>
+            )}
+
+            {selectedNodeFiles.length === 0 ? (
+              <div className="text-xs text-zinc-500 italic">No files cached on this node's disk.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {selectedNodeFiles.map((file) => (
+                  <div key={file.name} className="border border-zinc-800 bg-zinc-950 p-3 text-xs">
+                    <div className="text-white font-bold truncate mb-1">{file.name}</div>
+                    <div className="flex justify-between text-[10px] text-zinc-500">
+                      <span>Size: {formatBytes(file.sizeBytes)}</span>
+                      <span>Cached: {new Date(file.createdAt).toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Middle Grid: Redis Inspector & Origin File Manager */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

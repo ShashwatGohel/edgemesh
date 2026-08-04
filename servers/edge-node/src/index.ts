@@ -19,6 +19,11 @@ interface NodeHeartbeat {
   storageUsedBytes: number; activeConnections: number;
   cacheHitCount: number; cacheMissCount: number;
   lastHeartbeatTimestamp: number;
+  awsMetadata?: {
+    instanceId: string; instanceType: string; region: string;
+    availabilityZone: string; amiId: string;
+    lifecycle: 'spot' | 'on-demand'; simulated: boolean;
+  };
 }
 interface StepLogEvent {
   id: string; requestId?: string; timestamp: number;
@@ -130,9 +135,117 @@ let cacheHitCount   = 0;
 let cacheMissCount  = 0;
 let activeConnections = 0;
 
+// ── AWS EC2 Instance Metadata (IMDSv2 & Simulation) ───────────────────────────
+let ec2Metadata: {
+  instanceId: string;
+  instanceType: string;
+  region: string;
+  availabilityZone: string;
+  amiId: string;
+  lifecycle: 'spot' | 'on-demand';
+} | null = null;
+
+async function fetchEC2Metadata(): Promise<void> {
+  try {
+    const tokenRes = await axios.put('http://169.254.169.254/latest/api/token', null, {
+      headers: { 'X-aws-ec2-metadata-token-ttl-seconds': '21600' },
+      timeout: 1000,
+    });
+    const token = tokenRes.data;
+    const headers = { 'X-aws-ec2-metadata-token': token };
+    const [instanceIdRes, instanceTypeRes, amiIdRes, azRes] = await Promise.all([
+      axios.get('http://169.254.169.254/latest/meta-data/instance-id', { headers, timeout: 1000 }),
+      axios.get('http://169.254.169.254/latest/meta-data/instance-type', { headers, timeout: 1000 }),
+      axios.get('http://169.254.169.254/latest/meta-data/ami-id', { headers, timeout: 1000 }),
+      axios.get('http://169.254.169.254/latest/placement/availability-zone', { headers, timeout: 1000 }),
+    ]);
+    const az = azRes.data.trim();
+    ec2Metadata = {
+      instanceId: instanceIdRes.data.trim(),
+      instanceType: instanceTypeRes.data.trim(),
+      region: az.slice(0, -1),
+      availabilityZone: az,
+      amiId: amiIdRes.data.trim(),
+      lifecycle: 'on-demand',
+    };
+    console.log(`  EC2 Metadata      : REAL (${ec2Metadata.instanceId} / ${ec2Metadata.instanceType})`);
+  } catch {
+    // Simulated EC2 parameters based on node ID
+    const crypto = require('crypto');
+    const mappedRegion =
+      NODE_ID.includes('mumbai') ? 'ap-south-1' :
+      NODE_ID.includes('delhi') ? 'ap-south-1' :
+      NODE_ID.includes('singapore') ? 'ap-southeast-1' :
+      NODE_ID.includes('london') ? 'eu-west-2' :
+      NODE_ID.includes('frankfurt') ? 'eu-central-1' :
+      NODE_ID.includes('newyork') ? 'us-east-1' :
+      NODE_ID.includes('tokyo') ? 'ap-northeast-1' :
+      NODE_ID.includes('sydney') ? 'ap-southeast-2' : 'us-east-1';
+
+    ec2Metadata = {
+      instanceId: `i-${crypto.createHash('md5').update(NODE_ID).digest('hex').substring(0, 17)}`,
+      instanceType: 't3.medium',
+      region: mappedRegion,
+      availabilityZone: `${mappedRegion}a`,
+      amiId: `ami-${crypto.createHash('md5').update(mappedRegion).digest('hex').substring(0, 17)}`,
+      lifecycle: NODE_ID.includes('singapore') || NODE_ID.includes('tokyo') ? 'spot' : 'on-demand',
+    };
+    console.log(`  EC2 Metadata      : SIMULATED (${ec2Metadata.instanceId} / ${ec2Metadata.region})`);
+  }
+}
+
+// ── Lambda@Edge Function Runner ────────────────────────────────────────────────
+type LambdaEdgeFunction = 'none' | 'inject-security-headers' | 'geo-personalization';
+
+async function runLambdaEdge(
+  fn: LambdaEdgeFunction,
+  requestId: string | undefined
+): Promise<{ executionTimeMs: number; headersApplied: Record<string, string> }> {
+  const fnStart = Date.now();
+  const headersApplied: Record<string, string> = {};
+
+  if (fn === 'inject-security-headers') {
+    headersApplied['X-Content-Type-Options'] = 'nosniff';
+    headersApplied['X-Frame-Options'] = 'DENY';
+    headersApplied['X-XSS-Protection'] = '1; mode=block';
+    headersApplied['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+    headersApplied['Content-Security-Policy'] = "default-src 'self'; script-src 'self'";
+    headersApplied['Referrer-Policy'] = 'strict-origin-when-cross-origin';
+  } else if (fn === 'geo-personalization') {
+    headersApplied['X-Lambda-Edge-Greeting'] = `Hello from ${NODE_NAME} (${REGION}) 🌏`;
+    headersApplied['X-Lambda-Edge-Location'] = REGION;
+  }
+
+  const executionTimeMs = Date.now() - fnStart;
+
+  if (fn !== 'none') {
+    const logEvent: StepLogEvent = {
+      id: `lmd_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      requestId,
+      timestamp: Date.now(),
+      service: 'EDGE-NODE',
+      stepNumber: 3,
+      title: `[${NODE_NAME}] Lambda@Edge: Executed '${fn}'`,
+      details: `[Lambda@Edge] Function '${fn}' executed in ${executionTimeMs}ms on ${NODE_NAME}. Applied ${Object.keys(headersApplied).length} header(s).`,
+      level: 'success',
+      metadata: { nodeId: NODE_ID, region: REGION },
+    };
+    try {
+      await axios.post(`${REGISTRY_URL}/api/logs/emit`, logEvent, { timeout: 1000 });
+    } catch { /* ignore */ }
+  }
+
+  return { executionTimeMs, headersApplied };
+}
+
 app.use(cors({
   origin: '*',
-  exposedHeaders: ['X-Cache', 'X-Edge-Node-ID', 'X-Response-Time-Ms', 'X-Distance-Km', 'X-Selected-Node-Name', 'X-Selected-Node-ID', 'X-Request-ID']
+  exposedHeaders: [
+    'X-Cache', 'X-Edge-Node-ID', 'X-Response-Time-Ms', 'X-Distance-Km',
+    'X-Selected-Node-Name', 'X-Selected-Node-ID', 'X-Request-ID',
+    'X-Lambda-Edge-Executed', 'X-Lambda-Edge-Execution-Time-Ms',
+    'X-Lambda-Edge-Greeting', 'X-Lambda-Edge-Location'
+  ]
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -288,6 +401,18 @@ app.get('/files/:fileId', async (req, res) => {
   if (requestId) res.setHeader('X-Request-ID', requestId);
 
   logger.info({ fileId, requestId }, 'Received file request at Edge Node');
+
+  // ── Lambda@Edge: Execute selected function before cache resolution ──────────
+  const selectedFn = (req.query.edgeFn as LambdaEdgeFunction) || 'none';
+  const lambdaResult = await runLambdaEdge(selectedFn, requestId);
+  for (const [key, value] of Object.entries(lambdaResult.headersApplied)) {
+    res.setHeader(key, value);
+  }
+  if (selectedFn !== 'none') {
+    res.setHeader('X-Lambda-Edge-Executed', selectedFn);
+    res.setHeader('X-Lambda-Edge-Execution-Time-Ms', lambdaResult.executionTimeMs.toString());
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   // STEP 1: Level 1 Redis Cache Check
   const redisKey = `file:${fileId}`;
@@ -473,6 +598,15 @@ async function sendHeartbeat() {
     cacheHitCount,
     cacheMissCount,
     lastHeartbeatTimestamp: Date.now(),
+    awsMetadata: ec2Metadata ? {
+      instanceId: ec2Metadata.instanceId,
+      instanceType: ec2Metadata.instanceType,
+      region: ec2Metadata.region,
+      availabilityZone: ec2Metadata.availabilityZone,
+      amiId: ec2Metadata.amiId,
+      lifecycle: ec2Metadata.lifecycle,
+      simulated: !process.env.AWS_ACCESS_KEY_ID,
+    } : undefined,
   };
   try {
     await axios.post(`${REGISTRY_URL}/api/nodes/heartbeat`, heartbeat);
@@ -491,7 +625,10 @@ async function main() {
   // 1. Try to connect to real Redis
   await initRedis();
 
-  // 2. Start the HTTP server
+  // 2. Fetch EC2 instance metadata (real or simulated)
+  await fetchEC2Metadata();
+
+  // 3. Start the HTTP server
   app.listen(PORT, async () => {
     logger.info({ nodeId: NODE_ID, region: REGION, port: PORT }, '[EDGE-NODE] Started successfully');
     console.log(`\n  EdgeMesh Edge Node | ${NODE_NAME} | ${REGION}`);
